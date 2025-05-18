@@ -1,0 +1,78 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_classification
+from sklearn.metrics import confusion_matrix, accuracy_score
+import seaborn as sns
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def logistic_regression(X, y, lr=0.1, epochs=1000):
+    X = np.c_[np.ones(X.shape[0]), X]  
+    weights = np.zeros(X.shape[1])    
+    losses = []
+    accuracies = []
+
+    for _ in range(epochs):
+        z = X @ weights
+        y_pred = sigmoid(z)
+        loss = -np.mean(y * np.log(y_pred + 1e-9) + (1 - y) * np.log(1 - y_pred + 1e-9))
+        losses.append(loss)
+
+        gradient = X.T @ (y_pred - y) / len(y)
+        weights -= lr * gradient
+
+        predictions = (y_pred >= 0.5).astype(int)
+        accuracy = accuracy_score(y, predictions)
+        accuracies.append(accuracy)
+
+    return weights, losses, accuracies
+
+def plot_decision_boundary(X, y, weights):
+    # Create mesh grid
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200),
+                         np.linspace(y_min, y_max, 200))
+    grid = np.c_[np.ones(xx.ravel().shape[0]), xx.ravel(), yy.ravel()]
+    probs = sigmoid(grid @ weights).reshape(xx.shape)
+
+    plt.contourf(xx, yy, probs, levels=[0, 0.5, 1], alpha=0.2, colors=["blue", "red"])
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap='bwr', edgecolor='k')
+    plt.title("Logistic Regression - Decision Boundary")
+    plt.xlabel("Feature 1")
+    plt.ylabel("Feature 2")
+    plt.grid(True)
+    plt.show()
+
+def plot_confusion_matrix(cm):
+    plt.figure(figsize=(5,4))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["Pred 0", "Pred 1"], yticklabels=["True 0", "True 1"])
+    plt.title("Confusion Matrix")
+    plt.ylabel("Actual")
+    plt.xlabel("Predicted")
+    plt.show()
+
+def main():
+    X, y = make_classification(n_samples=100, n_features=2, n_classes=2, n_redundant=0)
+
+    weights, losses, accuracies = logistic_regression(X, y, lr=0.1, epochs=300)
+
+    X_bias = np.c_[np.ones(X.shape[0]), X]
+    final_preds = sigmoid(X_bias @ weights) >= 0.5
+    cm = confusion_matrix(y, final_preds.astype(int))
+
+    print("Logistic Regression Weights:", weights)
+
+    plt.plot(accuracies)
+    plt.title("Accuracy Over Epochs")
+    plt.xlabel("Epochs")
+    plt.ylabel("Accuracy")
+    plt.grid(True)
+    plt.show()
+
+    plot_confusion_matrix(cm)
+    plot_decision_boundary(X, y, weights)
+
+if __name__ == "__main__":
+    main()
