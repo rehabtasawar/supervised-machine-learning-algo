@@ -24,5 +24,4 @@ A collection of machine learning implementations in Python including:
 ## Getting Started
 
 ```bash
-git clone https://github.com/yourusername/ml-algorithms.git
-cd ml-algorithms
+git clone https://github.com/rehabtasawar/supervised-machine-learning-algo.git
